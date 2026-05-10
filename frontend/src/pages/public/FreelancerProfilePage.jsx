@@ -784,11 +784,8 @@ export default function FreelancerProfilePage() {
               <div style={S.hireBadge}>
                 <CheckCircle2 size={14} /> Available for work
               </div>
-              <Link
-                to={`/messages/new?userId=${profile.id}`}
-                style={S.btnHirePrimary}
-              >
-                <Mail size={15} /> Send a Message
+              <Link to={`/messages/${profile.id}`} className="btn btn-primary">
+                <Mail size={16} /> Message
               </Link>
               {cvUrl && (
                 <a href={cvUrl} target="_blank" style={S.btnHireGhost}>

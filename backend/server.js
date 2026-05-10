@@ -367,3 +367,4 @@ app.post('/api/upload/cv', auth, upload.single('cv'), async (req, res) => {
 
 
 app.use('/api/notifications', require('./routes/notifications'));
+app.use('/api/messages', require('./routes/messages'));

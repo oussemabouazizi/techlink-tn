@@ -8,6 +8,14 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 export default function MessagesPage() {
   const { userId } = useParams();
   const navigate = useNavigate();
+
+  // Immediately redirect if userId is invalid
+  useEffect(() => {
+    if (!userId || userId === 'undefined' || userId === 'new') {
+      navigate('/messages', { replace: true });
+    }
+  }, [userId, navigate]);
+
   const [conversations, setConversations] = useState([]);
   const [messages, setMessages] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -18,7 +26,6 @@ export default function MessagesPage() {
   const intervalRef = useRef(null);
   const backgroundFetching = useRef(false);
 
-  // Fetch conversations
   const fetchConversations = async () => {
     try {
       const { data } = await api.get('/messages/conversations');
@@ -28,7 +35,6 @@ export default function MessagesPage() {
     }
   };
 
-  // Fetch messages – showLoader controls the spinner, but NO AUTO-SCROLL
   const fetchMessages = async (targetUserId, showLoader = false) => {
     if (!targetUserId) return;
     if (showLoader) setLoadingMessages(true);
@@ -44,7 +50,6 @@ export default function MessagesPage() {
     }
   };
 
-  // Send message – no scroll
   const handleSend = async (e) => {
     e.preventDefault();
     if (!newMessage.trim() || !selectedUser) return;
@@ -64,7 +69,6 @@ export default function MessagesPage() {
     }
   };
 
-  // Select conversation – no scroll, only load messages
   const selectConversation = (partner) => {
     if (!partner?.id) return;
     setSelectedUser(partner);
@@ -72,33 +76,38 @@ export default function MessagesPage() {
     fetchMessages(partner.id, true);
   };
 
-  // Initial load (once)
+  // Initial load only if userId is valid
   useEffect(() => {
+    if (!userId || userId === 'undefined' || userId === 'new') {
+      setInitialLoading(false);
+      return;
+    }
+
     const init = async () => {
       setInitialLoading(true);
       await fetchConversations();
-      if (userId && userId !== 'undefined') {
-        const existing = conversations.find(c => c.partner?.id === userId);
-        if (existing) {
-          setSelectedUser(existing.partner);
+      const existing = conversations.find(c => c.partner?.id === userId);
+      if (existing) {
+        setSelectedUser(existing.partner);
+        await fetchMessages(userId, true);
+      } else {
+        try {
+          const { data: userProfile } = await api.get(`/users/${userId}`);
+          setSelectedUser(userProfile);
           await fetchMessages(userId, true);
-        } else {
-          try {
-            const { data: userProfile } = await api.get(`/users/${userId}`);
-            setSelectedUser(userProfile);
-          } catch (err) {
-            console.error('User not found', err);
-          }
+        } catch (err) {
+          console.error('User not found', err);
+          navigate('/messages', { replace: true });
         }
       }
       setInitialLoading(false);
     };
     init();
-  }, []);
+  }, [userId]);
 
-  // When userId changes (by clicking conversation), update
+  // When userId changes (by clicking conversation)
   useEffect(() => {
-    if (!userId || userId === 'undefined') return;
+    if (!userId || userId === 'undefined' || userId === 'new') return;
     if (selectedUser?.id === userId) return;
     const existing = conversations.find(c => c.partner?.id === userId);
     if (existing) {
@@ -114,7 +123,6 @@ export default function MessagesPage() {
     }
   }, [userId, conversations, selectedUser]);
 
-  // Polling for new messages – background, no loader, no scroll
   useEffect(() => {
     if (selectedUser) {
       intervalRef.current = setInterval(() => {
@@ -129,7 +137,6 @@ export default function MessagesPage() {
     return () => clearInterval(intervalRef.current);
   }, [selectedUser]);
 
-  // Real‑time subscription – background, no loader, no scroll
   useEffect(() => {
     const channel = supabase
       .channel('messages-channel')
@@ -182,7 +189,7 @@ export default function MessagesPage() {
           </div>
         </div>
 
-        {/* Right panel – chat area (no auto‑scroll) */}
+        {/* Right panel – chat area */}
         <div className="chat">
           {selectedUser ? (
             <>

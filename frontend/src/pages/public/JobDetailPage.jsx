@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../config/api'
@@ -194,49 +194,53 @@ const ShareIcon = () => (
 )
 
 export default function JobDetailPage() {
-  const { id }       = useParams()
-  const navigate     = useNavigate()
-  const { user }     = useAuth()
+  const { id }       = useParams();
+  const navigate     = useNavigate();
+  const { user }     = useAuth();
 
-  const [job, setJob]                     = useState(null)
-  const [loading, setLoading]             = useState(true)
-  const [showForm, setShowForm]           = useState(false)
-  const [proposalData, setProposalData]   = useState({ cover_letter:'', bid_amount:'', delivery_days:'' })
-  const [submitting, setSubmitting]       = useState(false)
-  const [submitted, setSubmitted]         = useState(false)
-  const [proposalCount, setProposalCount] = useState(0)
-  const [copied, setCopied]               = useState(false)
+  const [job, setJob]                     = useState(null);
+  const [loading, setLoading]             = useState(true);
+  const [showForm, setShowForm]           = useState(false);
+  const [proposalData, setProposalData]   = useState({ cover_letter:'', bid_amount:'', delivery_days:'' });
+  const [submitting, setSubmitting]       = useState(false);
+  const [submitted, setSubmitted]         = useState(false);
+  const [proposalCount, setProposalCount] = useState(0);
+  const [copied, setCopied]               = useState(false);
 
-  useEffect(() => { fetchJob() }, [id])
+  useEffect(() => { fetchJob(); }, [id]);
 
   const fetchJob = async () => {
     try {
-      const { data } = await api.get(`/jobs/${id}`)
-      setJob(data)
-      setProposalCount(data.proposal_count || 0)
-    } finally { setLoading(false) }
-  }
+      const { data } = await api.get(`/jobs/${id}`);
+      setJob(data);
+      setProposalCount(data.proposal_count || 0);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     try {
-      setSubmitting(true)
-      await api.post('/proposals', { ...proposalData, job_id: id })
-      setShowForm(false)
-      setSubmitted(true)
-      setProposalCount(c => c + 1) // live update
+      setSubmitting(true);
+      await api.post('/proposals', { ...proposalData, job_id: id });
+      setShowForm(false);
+      setSubmitted(true);
+      setProposalCount(c => c + 1);
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to submit proposal')
-    } finally { setSubmitting(false) }
-  }
+      alert(err.response?.data?.error || 'Failed to submit proposal');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleCopy = () => {
-    navigator.clipboard?.writeText(window.location.href)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+    navigator.clipboard?.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
-  if (loading) return <LoadingSpinner size="xl" className="min-h-screen" />
+  if (loading) return <LoadingSpinner size="xl" className="min-h-screen" />;
   if (!job) return (
     <div style={{ textAlign:'center', padding:'80px 24px', color:C.gray500, fontFamily:'inherit' }}>
       <div style={{ fontSize:52, marginBottom:12 }}>🔍</div>
@@ -245,31 +249,29 @@ export default function JobDetailPage() {
         Back to Jobs
       </Link>
     </div>
-  )
+  );
 
-  const isOpen         = job.status === 'open'
-  const isFreelancer   = user?.role === 'freelancer'
-  const isOwner        = user?.id === job.client_id
-  const canApply       = isFreelancer && isOpen && !submitted && !isOwner
-  const clientInitials = (job.profiles?.full_name || 'C').split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2)
+  const isOpen         = job.status === 'open';
+  const isFreelancer   = user?.role === 'freelancer';
+  const isOwner        = user?.id === job.client_id;
+  const canApply       = isFreelancer && isOpen && !submitted && !isOwner;
+  const clientInitials = (job.profiles?.full_name || 'C').split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2);
   const budget         = job.budget_min && job.budget_max
-    ? `${job.budget_min} – ${job.budget_max} TND` : 'Negotiable'
+    ? `${job.budget_min} – ${job.budget_max} TND`
+    : 'Negotiable';
 
   return (
     <div style={S.root}>
       <div style={S.container}>
-
-        {/* ── back ── */}
+        {/* Back button */}
         <button style={S.back} onClick={() => navigate(-1)}>
           <ArrowLeftIcon size={15} /> Back to Jobs
         </button>
 
-        {/* ── HERO ── */}
+        {/* Hero section (unchanged) */}
         <div style={S.hero}>
           <div style={S.heroCover}><div style={S.heroCoverInner} /></div>
           <div style={S.heroBody}>
-
-            {/* Title row */}
             <div style={S.heroMainRow}>
               <div style={{ flex:1, minWidth:0 }}>
                 <h1 style={S.title}>{job.title}</h1>
@@ -283,7 +285,7 @@ export default function JobDetailPage() {
               <span style={S.statusBadge(isOpen)}>{isOpen ? '● Open' : '● Closed'}</span>
             </div>
 
-            {/* Stats strip — budget · experience · proposals (no repetition elsewhere) */}
+            {/* Stats strip */}
             <div style={S.strip}>
               <div style={S.stripCell(false)}>
                 <div style={S.stripIconBox(C.p50, C.p600)}><TndIcon /></div>
@@ -314,16 +316,13 @@ export default function JobDetailPage() {
                 </div>
               </div>
             </div>
-
           </div>
         </div>
 
-        {/* ── CONTENT GRID ── */}
+        {/* Content Grid */}
         <div style={S.grid}>
-
-          {/* ── LEFT ── */}
+          {/* LEFT – description, requirements, skills, proposal form, success banner (unchanged) */}
           <div style={S.main}>
-
             {/* Description */}
             <div style={S.card}>
               <div style={S.cardHdr}>
@@ -333,7 +332,6 @@ export default function JobDetailPage() {
               <p style={S.bodyText}>{job.description}</p>
             </div>
 
-            {/* Requirements — only render if it exists AND differs from description */}
             {job.requirements && job.requirements !== job.description && (
               <div style={S.card}>
                 <div style={S.cardHdr}>
@@ -344,7 +342,6 @@ export default function JobDetailPage() {
               </div>
             )}
 
-            {/* Skills */}
             {job.skills_required?.length > 0 && (
               <div style={S.card}>
                 <div style={S.cardHdr}>
@@ -359,7 +356,6 @@ export default function JobDetailPage() {
               </div>
             )}
 
-            {/* Proposal form */}
             {showForm && (
               <div style={S.proposalWrap}>
                 <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:20 }}>
@@ -410,15 +406,13 @@ export default function JobDetailPage() {
                       Cancel
                     </button>
                     <button type="submit" style={S.btnSubmit} disabled={submitting}>
-                      <SendIcon size={14} />
-                      {submitting ? 'Submitting…' : 'Submit Proposal'}
+                      <SendIcon size={14} /> {submitting ? 'Submitting…' : 'Submit Proposal'}
                     </button>
                   </div>
                 </form>
               </div>
             )}
 
-            {/* Success banner */}
             {submitted && (
               <div style={S.successBanner}>
                 <div style={S.successIcon}>✓</div>
@@ -432,16 +426,12 @@ export default function JobDetailPage() {
                 </div>
               </div>
             )}
-
           </div>
 
-          {/* ── RIGHT SIDEBAR ── */}
+          {/* RIGHT SIDEBAR – action card, job details, share */}
           <aside style={S.sidebar}>
-
-            {/* Action card — dark blue */}
+            {/* Action card */}
             <div style={S.actionCard}>
-
-              {/* Client info */}
               <p style={{ fontSize:10, color:'rgba(255,255,255,0.4)', fontWeight:700,
                 textTransform:'uppercase', letterSpacing:'0.08em', margin:0 }}>
                 Posted by
@@ -459,13 +449,13 @@ export default function JobDetailPage() {
 
               <div style={S.dividerW} />
 
-              {/* CTA buttons — context-aware */}
+              {/* CTA buttons – FIXED MESSAGE LINKS */}
               {!user && (
                 <>
                   <Link to="/login" style={S.btnWhite}>
                     <SendIcon size={14} /> Login to Apply
                   </Link>
-                  <Link to={`/login`} style={S.btnGhostW}>
+                  <Link to="/login" style={S.btnGhostW}>
                     <MsgIcon /> Message Client
                   </Link>
                 </>
@@ -474,13 +464,9 @@ export default function JobDetailPage() {
               {canApply && (
                 <>
                   <button style={S.btnWhite} onClick={() => setShowForm(v => !v)}>
-                    <SendIcon size={14} />
-                    {showForm ? 'Hide Proposal Form' : 'Apply Now'}
+                    <SendIcon size={14} /> {showForm ? 'Hide Proposal Form' : 'Apply Now'}
                   </button>
-                  <Link
-                    to={`/messages/new?userId=${job.user_id}`}
-                    style={S.btnGhostW}
-                  >
+                  <Link to={`/messages/${job.client_id}`} style={S.btnGhostW}>
                     <MsgIcon /> Message Client
                   </Link>
                 </>
@@ -494,14 +480,14 @@ export default function JobDetailPage() {
                     color:'#4ade80', fontSize:13, fontWeight:700, justifyContent:'center' }}>
                     ✓ Proposal Sent
                   </div>
-                  <Link to={`/messages/new?userId=${job.user_id}`} style={S.btnGhostW}>
+                  <Link to={`/messages/${job.client_id}`} style={S.btnGhostW}>
                     <MsgIcon /> Message Client
                   </Link>
                 </>
               )}
 
               {user?.role === 'client' && !isOwner && (
-                <Link to={`/messages/new?userId=${job.user_id}`} style={S.btnWhite}>
+                <Link to={`/messages/${job.client_id}`} style={S.btnWhite}>
                   <MsgIcon /> Message Client
                 </Link>
               )}
@@ -520,7 +506,7 @@ export default function JobDetailPage() {
               )}
             </div>
 
-            {/* Job details — only non-repeated, unique info */}
+            {/* Job details */}
             <div style={S.card}>
               <div style={{ ...S.cardHdr, marginBottom:12 }}>
                 <div style={S.cardIconBox(C.p50, C.p600)}>
@@ -541,9 +527,7 @@ export default function JobDetailPage() {
                 <div key={label} style={{ display:'flex', justifyContent:'space-between',
                   alignItems:'center', padding:'9px 0', borderBottom:`1px solid ${C.border}` }}>
                   <span style={{ fontSize:12, color:C.text3, fontWeight:600,
-                    textTransform:'uppercase', letterSpacing:'0.04em' }}>
-                    {label}
-                  </span>
+                    textTransform:'uppercase', letterSpacing:'0.04em' }}>{label}</span>
                   <span style={{ fontSize:13, fontWeight:700, color:C.text1 }}>{value}</span>
                 </div>
               ))}
@@ -559,10 +543,9 @@ export default function JobDetailPage() {
                 <ArrowLeftIcon size={14} /> Browse More Jobs
               </Link>
             </div>
-
           </aside>
         </div>
       </div>
     </div>
-  )
+  );
 }
