@@ -18,7 +18,7 @@ exports.register = async (req, res) => {
     } = req.body;
 
     if (!email || !password || !full_name || !role) {
-      return res.status(400).json({ error: 'Missing required fields: email, password, full_name, role' });
+      return res.status(400).json({ error: 'Missing required fields' });
     }
 
     // Ensure unique username
@@ -37,12 +37,13 @@ exports.register = async (req, res) => {
       counter++;
     }
 
-    // Check email not already registered
+    // Check if email already exists
     const { data: existing } = await supabaseAdmin
       .from('profiles')
       .select('id')
       .eq('email', email)
       .maybeSingle();
+
     if (existing) {
       return res.status(400).json({ error: 'Email already registered' });
     }
@@ -55,42 +56,29 @@ exports.register = async (req, res) => {
       user_metadata: { full_name, role, username: finalUsername },
     });
 
-    if (authError) {
-      console.error('Auth creation error:', authError);
-      return res.status(500).json({ error: `Auth error: ${authError.message}` });
-    }
+    if (authError) throw authError;
 
     createdAuthUserId = authData.user.id;
 
-    // Wait a moment for trigger, then ensure profile exists
-    await new Promise(r => setTimeout(r, 500));
-
-    const { data: triggerProfile } = await supabaseAdmin
+    // Manually insert profile (skip trigger)
+    const { error: profileError } = await supabaseAdmin
       .from('profiles')
-      .select('id')
-      .eq('id', createdAuthUserId)
-      .maybeSingle();
+      .insert({
+        id: createdAuthUserId,
+        email,
+        full_name,
+        role,
+        username: finalUsername,
+        created_at: new Date().toISOString(),
+      });
 
-    if (!triggerProfile) {
-      const { error: manualError } = await supabaseAdmin
-        .from('profiles')
-        .insert({
-          id: createdAuthUserId,
-          email,
-          full_name,
-          role,
-          username: finalUsername,
-          created_at: new Date().toISOString(),
-        });
-
-      if (manualError) {
-        console.error('Manual profile insert error:', manualError);
-        await supabaseAdmin.auth.admin.deleteUser(createdAuthUserId);
-        return res.status(500).json({ error: `Profile creation failed: ${manualError.message}` });
-      }
+    if (profileError) {
+      // Rollback: delete auth user
+      await supabaseAdmin.auth.admin.deleteUser(createdAuthUserId);
+      return res.status(500).json({ error: `Profile creation failed: ${profileError.message}` });
     }
 
-    // Store freelancer extra fields including title
+    // Insert freelancer or client extra fields
     if (role === 'freelancer') {
       const skillsArray = skills ? skills.split(',').map(s => s.trim()).filter(Boolean) : [];
       const hourlyRateNum = hourly_rate ? parseFloat(hourly_rate) : null;
@@ -105,21 +93,28 @@ exports.register = async (req, res) => {
         });
 
       if (freelancerError) {
-        console.warn('Freelancer profile insert warning:', freelancerError);
+        console.warn('Freelancer profile insert warning:', freelancerError.message);
+        // Not fatal – continue
       }
     } else if (role === 'client' && company_name) {
-      await supabaseAdmin
+      const { error: clientError } = await supabaseAdmin
         .from('profiles')
         .update({ company_name })
-        .eq('id', createdAuthUserId)
-        .catch(err => console.warn('Client company update warning:', err.message));
+        .eq('id', createdAuthUserId);
+
+      if (clientError) {
+        console.warn('Client company update warning:', clientError.message);
+      }
     }
 
     // Create free subscription
-    await supabaseAdmin
+    const { error: subError } = await supabaseAdmin
       .from('subscriptions')
-      .insert({ user_id: createdAuthUserId, plan: 'free', status: 'active' })
-      .catch(err => console.warn('Subscription insert warning:', err.message));
+      .insert({ user_id: createdAuthUserId, plan: 'free', status: 'active' });
+
+    if (subError) {
+      console.warn('Subscription insert warning:', subError.message);
+    }
 
     const token = generateToken(createdAuthUserId);
 
@@ -135,9 +130,9 @@ exports.register = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Register error:', error);
+    console.error('Registration error:', error);
     if (createdAuthUserId) {
-      await supabaseAdmin.auth.admin.deleteUser(createdAuthUserId).catch(e => console.error('Rollback failed:', e.message));
+      await supabaseAdmin.auth.admin.deleteUser(createdAuthUserId).catch(e => console.warn('Rollback failed:', e.message));
     }
     return res.status(500).json({ error: error.message || 'Registration failed' });
   }
