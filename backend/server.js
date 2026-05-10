@@ -244,7 +244,7 @@ app.use('/api/proposals', require('./routes/proposals'));
 app.use('/api/messages', require('./routes/messages'));
 app.use('/api/subscriptions', require('./routes/subscriptions'));
 app.use('/api/admin', require('./routes/admin'));
-app.use('/api/upload', require('./routes/upload'));
+//app.use('/api/upload', require('./routes/upload'));
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
