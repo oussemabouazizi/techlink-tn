@@ -1,0 +1,167 @@
+/* JobCard.css - dedicated styles for job cards */
+.job-card-custom {
+  background: white;
+  border-radius: 1rem;
+  border: 1px solid #e5e7eb;
+  padding: 1.25rem;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  height: 100%;
+}
+
+.job-card-custom:hover {
+  transform: translateY(-4px);
+  border-color: #3b82f6;
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+}
+
+/* Avatar - bigger size */
+.job-card-avatar {
+  width: 56px !important;
+  height: 56px !important;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+/* Header row with more gap for larger avatar */
+.job-card-header-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.job-card-header-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.job-card-title {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #111827;
+  margin: 0 0 0.25rem 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.job-card-client {
+  font-size: 0.75rem;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Description */
+.job-card-description {
+  font-size: 0.875rem;
+  color: #4b5563;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Skills */
+.job-card-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.job-card-skill {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: #eff6ff;
+  color: #1e40af;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  border: 1px solid #bfdbfe;
+}
+
+/* Info row (budget, duration, location) */
+.job-card-info-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.job-card-info-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.job-card-info-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Footer */
+.job-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 0.25rem;
+}
+
+.job-card-stats {
+  font-size: 0.7rem;
+  color: #9ca3af;
+}
+
+.job-card-button {
+  display: inline-block;
+  background: transparent;
+  color: #2563eb;
+  border: 1px solid #93c5fd;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.job-card-button:hover {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  transform: translateY(-1px);
+}
+
+/* Save bookmark button */
+.job-card-save-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  transition: color 0.2s;
+  flex-shrink: 0;
+  padding: 0;
+  margin-top: 0.25rem;
+}
+
+.job-card-save-btn:hover {
+  color: #2563eb;
+}
+
+.job-card-save-btn.saved {
+  color: #2563eb;
+}
+
+.job-card-save-btn.saved svg {
+  fill: #2563eb;
+}
